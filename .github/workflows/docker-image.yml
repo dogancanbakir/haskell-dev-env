@@ -11,7 +11,7 @@ on:
         - ".github/**"
     branches: [main]
   workflow_dispatch:
-
+  
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -25,29 +25,6 @@ jobs:
         cabal: ["3.6.2.0"]
         hls: ["1.7.0.0"]
     steps:
-      -
-        name: Get current date
-        id: date
-        run: echo "::set-output name=now::$(date +s)"
-      -
-        name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-      -
-        name: Login to DockerHub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      -
-        name: Build and push
-        uses: docker/build-push-action@v3
-        with:
-          context: "{{defaultContext}}:.devcontainer"
-          push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/haskelldevenv:${{ matrix.ghc }}-${{ matrix.resolver }}-${{ matrix.resolver }}-${{ steps.date.outputs.now }}
-          build-args: |
-            GHC_VERSION=${{ matrix.ghc }}
-            STACK_RESOLVER=${{ matrix.resolver }}
-            STACK_VERSION=${{ matrix.stack }}
-            CABAL_VERSION=${{ matrix.cabal }}
-            HLS_VERSION=${{ matrix.hls }}
+    - uses: actions/checkout@v2
+    - name: Build the Docker image
+      run: docker build ./.devcontainer/ --file ./.devcontainer/Dockerfile --build-arg GHC_VERSION=${{ matrix.ghc }} --build-arg STACK_RESOLVER=${{ matrix.resolver }} --build-arg STACK_VERSION=${{ matrix.stack }} --build-arg CABAL_VERSION=${{ matrix.cabal }} --build-arg HLS_VERSION=${{ matrix.hls }} --tag vlza/haskelldevenv:${{ matrix.ghc }}-${{ matrix.resolver }}-${{ matrix.resolver }}-$(date +%s)
